@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG to PDF コンバーター</title>
+    <!-- PDFを作るための便利なライブラリを読み込む -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/svg2pdf.js/2.2.2/svg2pdf.umd.min.js"></script>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 50px; }
+        .container { border: 2px dashed #ccc; padding: 30px; border-radius: 10px; display: inline-block; }
+        button { margin-top: 20px; padding: 10px 20px; font-size: 16px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>SVGをPDFに変換</h1>
+        <p>SVGファイルを選択してください</p>
+        <!-- ファイルを選択するボタン -->
+        <input type="file" id="svgInput" accept=".svg">
+        <br>
+        <!-- 変換を実行するボタン -->
+        <button id="convertBtn">PDFに変換してダウンロード</button>
+    </div>
+
+    <script>
+        // 「変換ボタン」が押されたときの処理
+        document.getElementById('convertBtn').addEventListener('click', async () => {
+            const fileInput = document.getElementById('svgInput');
+            
+            // ファイルが選ばれていない場合のエラー処理
+            if (fileInput.files.length === 0) {
+                alert('SVGファイルを選択してください。');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            // ファイルの読み込みが終わった後の処理
+            reader.onload = async function(e) {
+                const svgContent = e.target.result;
+                
+                // SVGデータをブラウザが理解できる形に変換
+                const parser = new DOMParser();
+                const svgDoc = parser.parseFromString(svgContent, "image/svg+xml");
+                const svgElement = svgDoc.documentElement;
+                
+                // サイズを計算するために一時的に画面の裏側に配置
+                document.body.appendChild(svgElement);
+                svgElement.style.position = 'absolute';
+                svgElement.style.visibility = 'hidden';
+
+                // SVGの縦横サイズを取得（基本は500pxとする）
+                const width = svgElement.width.baseVal.value || 500;
+                const height = svgElement.height.baseVal.value || 500;
+
+                // jsPDFの準備（PDFのキャンバスを作る）
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({
+                    orientation: width > height ? 'l' : 'p', // 横長か縦長か
+                    unit: 'pt',
+                    format: [width, height]
+                });
+
+                // svg2pdfを使って、PDF上にSVGを描き込む
+                await doc.svg(svgElement, {
+                    x: 0,
+                    y: 0,
+                    width: width,
+                    height: height
+                });
+
+                // 一時的に置いたSVGを削除
+                document.body.removeChild(svgElement);
+
+                // 完成したPDFをダウンロード！
+                doc.save('converted.pdf');
+            };
+
+            // ファイルをテキストとして読み込む
+            reader.readAsText(file);
+        });
+    </script>
+
+</body>
+</html>
