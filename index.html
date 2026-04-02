@@ -4,8 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SVG to PDF コンバーター</title>
+    
+    <!-- 1. PDFを作るツールを読み込む -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <!-- ★追加したおまじない：2つのツールが連携できるようにする -->
+    <script>window.jsPDF = window.jspdf.jsPDF;</script>
+    
+    <!-- 2. SVGを読み込むツールを読み込む -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/svg2pdf.js/2.2.2/svg2pdf.umd.min.js"></script>
+    
     <style>
         body { font-family: sans-serif; text-align: center; padding: 50px; }
         .container { border: 2px dashed #ccc; padding: 30px; border-radius: 10px; display: inline-block; }
@@ -50,7 +58,6 @@
                     svgElement.style.position = 'absolute';
                     svgElement.style.visibility = 'hidden';
 
-                    // ★改良ポイント：どんなSVGでもサイズを安全に読み取るようにしました
                     let width = 500;
                     let height = 500;
                     
@@ -75,6 +82,7 @@
                         format: [width, height]
                     });
 
+                    // PDF上にSVGを描き込む
                     await doc.svg(svgElement, {
                         x: 0,
                         y: 0,
@@ -87,7 +95,6 @@
                     doc.save('converted.pdf');
                     
                 } catch (error) {
-                    // ★改良ポイント：エラーが起きたら画面にお知らせを出すようにしました
                     console.error(error);
                     alert("エラーが発生しました: " + error.message);
                 }
